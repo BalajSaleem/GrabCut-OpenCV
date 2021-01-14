@@ -56,7 +56,7 @@ class App():
 
     def onmouse(self, event, x, y, flags, param):
         # Draw rectangle
-        if event == cv.EVENT_RBUTTONDOWN:
+        if event == cv.EVENT_MBUTTONDOWN:
             self.rectangle = True
             self.ix, self.iy = x,y
 
@@ -69,7 +69,7 @@ class App():
                              abs(self.iy - y))
                 self.rect_or_mask = 0
 
-        elif event == cv.EVENT_RBUTTONUP:
+        elif event == cv.EVENT_MBUTTONUP:
             self.rectangle = False
             self.rect_over = True
             cv.rectangle(self.input, (self.ix, self.iy), (x, y), self.BLUE, 2)
@@ -106,16 +106,14 @@ class App():
                 self.segment()
 
 
-    def reset(self):
+    def reset(self,  *args):
         print('Resetting')
-
         self.rect = (0, 0, 1, 1)
         self.drawing = False
         self.rectangle = False
         self.rect_or_mask = 100
         self.rect_over = False
         self.value = self.DRAW_FG
-
         self.input = self.copy.copy()
         self.mask = np.zeros(self.input.shape[:2], dtype = np.uint8)
         self.output = np.zeros(self.input.shape, np.uint8)
@@ -126,17 +124,16 @@ class App():
         if len(x) == 0 or len(y) == 0: return img
         return img[np.min(x) : np.max(x), np.min(y) : np.max(y)]
 
-
-    def save(self):
+    def save(self,  *args):
         # Apply alpha
         b, g, r, = cv.split(self.copy)
         img = cv.merge((b, g, r, self.alpha))
-
         cv.imwrite(self.outfile, self.crop_to_alpha(img))
         print('Saved')
 
 
-    def segment(self):
+    def segment(self,  *args):
+        print('segmenting...')
         try:
             if self.rect_or_mask == 0:
                 mask_type = cv.GC_INIT_WITH_RECT
@@ -168,6 +165,17 @@ class App():
         self.alpha  = np.zeros(self.input.shape[:2], dtype = np.uint8)
 
 
+    def mark_bg(self, *args):
+        print(" mark background regions with left mouse button \n")
+        self.value = self.DRAW_BG
+
+    def mark_fg(self, *args):
+        print(" mark foreground regions with left mouse button \n")
+        self.value = self.DRAW_FG
+
+    def change_thickness(self, val, *args):
+        self.thickness = val
+
     def run(self):
         self.load()
         self.reset()
@@ -175,10 +183,18 @@ class App():
         # Input and output windows
         cv.namedWindow('output')
         cv.namedWindow('input')
+        cv.createButton("Mark Background",self.mark_bg,None,cv.QT_PUSH_BUTTON,1)
+        cv.createButton("Mark Foreground",self.mark_fg,None,cv.QT_PUSH_BUTTON,1)
+        cv.createButton("Segment",self.segment,None,cv.QT_PUSH_BUTTON,1)
+        cv.createButton("Reset",self.reset,None,cv.QT_PUSH_BUTTON,1)
+        cv.createButton("Save",self.save,None,cv.QT_PUSH_BUTTON,1)
+        cv.createTrackbar('brush thickness','input',3,10, self.change_thickness)
         cv.setMouseCallback('input', self.onmouse)
         cv.moveWindow('input', self.input.shape[1] + 10, 90)
 
-        print('Draw a rectangle around the object using right mouse button')
+        print('Draw a rectangle around the object using middle mouse button')
+        print('Press ctrl+P for other image segmentation options')
+
 
         while True:
             cv.imshow('output', self.output)
@@ -194,7 +210,7 @@ class App():
             elif k == ord('s'): self.save()
             elif k == ord('r'): self.reset()
             elif k == ord('n'): self.segment()
-            else: continue
+            #else: continue
 
             self.alpha = np.where((self.mask == 1) + (self.mask == 3), 255,
                                   0).astype('uint8')

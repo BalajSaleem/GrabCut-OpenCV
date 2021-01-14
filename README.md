@@ -21,13 +21,11 @@ information.
 
     grabcut.py <input> [output]
 
-## Operation
-
-At startup, two windows will appear, one for input and one for output.
-
-To start, draw a rectangle around the object using mouse right button.  For
-finer touch-ups, press any of the keys below and draw circles to mark the
-background and foreground.  Finally, press 's' to save the result.
+## Instructions
+1. After seeing the input and output windows, draw a rectangle arround the object using middle mouse button and wait for segmentation in output window.
+2. Press ctrl+P to see the control pannel with the options of Mark Forgeground / Background, Reset and Save.
+3. Click the relevant option and start marking the regions with the brush using the left mouse button, you may change the thickness of the brush, from input window.
+4. Reset or Save the final annotation.
 
 ## Keys
   * 0 - Select areas of sure background
